@@ -10,10 +10,14 @@ November 20, 2026, built for the
 
 ## The image
 
-A deterministic Pillow program (`main.py`, Python 3.13, standard library +
-Pillow) renders a 1024 × 1024 PNG front page: a midnight-blue masthead, the
+The entry is a 1024 × 1024 PNG front page: a midnight-blue masthead, the
 Apollo 17 Blue Marble Earth (NASA, public domain), and seven verified stories
-from November 20, 2026:
+from November 20, 2026. The entrypoint `main.py` (Python 3.13, standard
+library only) copies the bundled `entry.png` to the output directory — the
+grader's image has no third-party packages, so the program renders nothing
+at runtime. The image is rendered locally by `render.py` (Pillow) and
+committed as `entry.png`; re-running the renderer and re-copying the output
+reproduces the same bytes:
 
 - **Lead** — Russia's biggest attack on Kyiv this year (400+ drones, 110+
   missiles, 8+ killed).
@@ -31,8 +35,9 @@ free) and the Earth photo in `assets/`.
 ## Run it
 
 ```sh
-python3 main.py        # writes /output/entry.png (or ./output/entry.png)
-python3 test_entry.py  # checks size, dimensions and determinism
+python3 main.py        # copies entry.png to /output/entry.png (or ./output/entry.png)
+python3 test_entry.py  # checks size, dimensions and determinism (stdlib only)
+python3 render.py      # re-render entry.png locally with Pillow, then copy it to the repo root
 ```
 
 ## License

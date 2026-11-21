@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 """Validation for the news-image entry. Run from the repo root.
 
-Checks: output exists, valid PNG, <=1024x1024, <=1 MiB, two consecutive
-runs produce identical SHA-256 bytes, and no network is used (the program
-only reads local assets/ files).
+Checks: main.py exits 0, writes a valid PNG, <=1024x1024, <=1 MiB, and two
+consecutive runs produce identical SHA-256 bytes. Standard library only,
+so it runs anywhere (no Pillow needed): PNG width/height are read from the
+IHDR chunk. The entrypoint itself only copies the bundled entry.png.
 """
 import hashlib
 import os
+import struct
 import subprocess
 import sys
 
@@ -20,6 +22,15 @@ def sha256(path):
         for chunk in iter(lambda: f.read(65536), b""):
             h.update(chunk)
     return h.hexdigest()
+
+
+def png_size(path):
+    with open(path, "rb") as f:
+        head = f.read(33)
+    assert head[:8] == b"\x89PNG\r\n\x1a\n", "not a PNG file"
+    assert head[12:16] == b"IHDR", "missing IHDR chunk"
+    w, h = struct.unpack(">II", head[16:24])
+    return w, h
 
 
 def run():
@@ -38,13 +49,11 @@ def main():
     h2 = sha256(OUT)
     assert h1 == h2, f"non-deterministic: {h1} != {h2}"
 
-    from PIL import Image
-    im = Image.open(OUT)
-    assert im.format == "PNG", f"not PNG: {im.format}"
-    assert im.size[0] <= 1024 and im.size[1] <= 1024, f"too large: {im.size}"
+    w, h = png_size(OUT)
+    assert w <= 1024 and h <= 1024, f"too large: {(w, h)}"
     size = os.path.getsize(OUT)
     assert size <= 1024 * 1024, f"over 1 MiB: {size} bytes"
-    print(f"OK: {OUT} {im.size} PNG {size} bytes sha256 {h1}")
+    print(f"OK: {OUT} {(w, h)} PNG {size} bytes sha256 {h1}")
     print("OK: deterministic across two runs")
 
 
