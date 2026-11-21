@@ -22,12 +22,16 @@ def main():
     out_dir = os.environ.get("MAKEFUN_OUTPUT_DIR", "/output")
     try:
         os.makedirs(out_dir, exist_ok=True)
-        shutil.copyfile(SRC, os.path.join(out_dir, "entry.png"))
+        dst = os.path.join(out_dir, "entry.png")
+        shutil.copyfile(SRC, dst)
     except OSError:
         out_dir = os.path.join(HERE, "output")
         os.makedirs(out_dir, exist_ok=True)
-        shutil.copyfile(SRC, os.path.join(out_dir, "entry.png"))
-    print("wrote", os.path.join(out_dir, "entry.png"))
+        dst = os.path.join(out_dir, "entry.png")
+        shutil.copyfile(SRC, dst)
+    # Fail loudly if the copy is incomplete, so a bad run never looks done.
+    assert os.path.getsize(dst) == os.path.getsize(SRC), "incomplete copy"
+    print("wrote", dst)
 
 
 if __name__ == "__main__":
